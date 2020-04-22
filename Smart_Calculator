@@ -1,0 +1,102 @@
+import re
+
+def upgrade(s):
+	global array
+	s = s.replace('=', ' ')
+	array = s.split(' ')
+	array = [i for i in array if i != ""]
+
+
+def check(string_1):
+	global ch, array
+	upgrade(string_1)
+	if (string.count('=') == 0) and (re.findall('[-+]', string)):
+		ch = 'Invalid expression'
+	elif not array[0].isalpha():
+		ch = 'Invalid identifier'
+	elif string.count('=') == 0:
+		ch = ''
+	elif (string.count('=') > 1) or (not array[1].isdigit() and not array[1].isalpha()):
+		ch = 'Invalid assignment'
+
+
+def change():
+	global string, array_string
+	if re.findall('[-+/*^]', string):
+		for i in range(len(string)):
+			if re.findall('[-+*/()]', string[i]):
+				array_string += ' ' + string[i] + ' '
+			elif string[i] == '^':
+				array_string += ' ** '
+			else:
+				array_string += string[i]
+
+
+class Calculator:
+	a = {}
+
+	def __init__(self, keys, values):
+		if values.isdigit() and keys.isalpha():
+			self.a[keys] = values
+		elif values.isalpha():
+			try:
+				self.a[keys] = self.a[values]
+			except KeyError:
+				print('Unknown variable')
+
+	def count(self):
+		try:
+			for i in range(len(array)):
+				if re.findall('[A-Za-z]', array[i]) and re.findall('[(]', array[i]):
+					array[i] = array[i][0] + self.a[array[i][1:]]
+				elif re.findall('[A-Za-z]', array[i]) and re.findall('[)]', array[i]):
+					array[i] = array[i][len(array[i])-1] + self.a[array[i][:len(array[i])-1]]
+				elif array[i].isalpha():
+					array[i] = self.a[array[i]]
+			s = ''.join(array)
+			k = eval(s)
+			try:
+				k = int(k)
+			except TypeError:
+				pass
+			print(k)
+		except KeyError:
+			print('Unknown variable')
+		except SyntaxError:
+			print('Invalid expression')
+		finally:
+			array.clear()
+
+
+st, string = Calculator('key', '0'), ''
+while string != '/exit':
+	string = input()
+	ch = ''
+	array_string = ''
+	string = string.replace('> ', '')
+	array = string.split(' ')
+	change()
+	try:
+		check(string)
+		if string == '/exit':
+			print('Bye!')
+		elif string == '/help':
+			print('The program calculates the sum of numbers')
+		elif string[0] == '/':
+			print('Unknown command')
+		elif re.findall('[-+/*^]', string):
+			upgrade(array_string)
+			st.count()
+		elif ch != '':
+			print(ch)
+			continue
+		elif string.count('=') == 1:
+			upgrade(string)
+			st = Calculator(array[0], array[1])
+		else:
+			try:
+				st.count()
+			except TypeError:
+				print('Invalid identifier')
+	except IndexError:
+		continue
